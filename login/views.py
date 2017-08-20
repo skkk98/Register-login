@@ -20,9 +20,7 @@ from django.core.mail import EmailMessage
 
 def Oh(request):
     return HttpResponse("<h1>If you are reading this then Hell yeaaaah! you are logged in!</h1>")
-# OKAY BRO NOW EVERYTHING IS GOING TO CHANGE.
-# I HOPE YOU KNOW WHAT I AM GOING TO CHANGE
-# LET'S DO IT RIGHT AWAY
+
 
 class RegisterFormView(View):
     form_class = RegistrationForm
