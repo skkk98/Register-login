@@ -12,6 +12,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .tokens import account_activation_token
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
+from django.conf import settings
 
 # def index(request):
    # all_users = User.objects.all()
@@ -43,15 +44,27 @@ class RegisterFormView(View):
 
 
             if password==confirm_password:
-
+                user.is_active = False
                 user.set_password(password)
                 user.save()
+                current_site = get_current_site(request)
+                message = render_to_string('login/acc_active_email.html', {
+                    'user': user,
+                    'domain': current_site.domain,
+                    'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                    'token': account_activation_token.make_token(user),
+                })
+                mail_subject = 'Activate your account.'
+                to_email = form.cleaned_data.get('email')
 
+                email = EmailMessage(mail_subject, message, settings.EMAIL_HOST_USER, to=[to_email])
+                email.send()
                 user = authenticate(username=username, password=password)
-                return HttpResponseRedirect('/login/login')
+                return HttpResponse('Please confirm your email address')
             else:
                 return HttpResponse('<a><strong>Passwords do not match!</strong></a><br><a href=""><strong>Click Here</strong></a> <a>to try again!</a>')
 
+        return render(request, self.template_name, {'form': form})
 
 class LoginFormView(View):
     form_class = LoginForm
@@ -74,12 +87,17 @@ class LoginFormView(View):
         else:
             return HttpResponse('<a href=""><strong>Click Here</strong></a> <a>to try again!</a> ')
 
-def activate(requset, uidb64, token):
+def activate(request, uidb64, token):
     try:
         uid = force_text(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
     except(TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
     if user is not None and account_activation_token.check_token(user, token):
-        user.is_active= True
+        user.is_active = True
+        user.save()
+        login(request, user)
+        return HttpResponse('Email confirmed. Now you can login')
+    else:
+        return HttpResponse('Activation link is invalid!')
 
