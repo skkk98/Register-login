@@ -13,6 +13,8 @@ from .tokens import account_activation_token
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.conf import settings
+from website.sms import send_sms
+
 
 # def index(request):
    # all_users = User.objects.all()
@@ -29,6 +31,7 @@ class RegisterFormView(View):
 
     def get(self, request):
         form = self.form_class(None)
+
         return render(request, self.template_name, {'form': form})
 
     def post(self, request):
@@ -60,7 +63,7 @@ class RegisterFormView(View):
                 email = EmailMessage(mail_subject, message, settings.EMAIL_HOST_USER, to=[to_email])
                 email.send()
                 user = authenticate(username=username, password=password)
-                return HttpResponse('Please confirm your email address')
+                return HttpResponse('Please confirm your email address and then <a href="/login/login"><strong>Login Here!</strong></a>')
             else:
                 return HttpResponse('<a><strong>Passwords do not match!</strong></a><br><a href=""><strong>Click Here</strong></a> <a>to try again!</a>')
 
@@ -76,7 +79,7 @@ class LoginFormView(View):
 
     def post(self, request):
         form = self.form_class(request.POST)
-
+        send_sms(str(9949103568), "If you are reading this,then Hell YEAH!!!, You are AWESOME")
         username = request.POST['username']
         password = request.POST['password']
         user = authenticate(request, username=username, password=password)
@@ -97,7 +100,7 @@ def activate(request, uidb64, token):
         user.is_active = True
         user.save()
         login(request, user)
-        return HttpResponse('Email confirmed. Now you can login')
+        return HttpResponse('<a>Email confirmed. Click to</a> <a href="/login/login"><strong>Login Here</strong></a>')
     else:
-        return HttpResponse('Activation link is invalid!')
+        return HttpResponse('Activation link is invalid! Click to</a> <a href="/login/login"><strong>Login!</strong></a>')
 
