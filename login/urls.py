@@ -7,4 +7,6 @@ urlpatterns = [
     url(r'^login/oh/$', views.Oh, name='oh'),
     url(r'^activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         views.activate, name='activate'),
+    url(r'^verify/$', views.MobileVerForm.as_view(), name='verify'),
+    url(r'^display$', views.Display, name='display')
 ]

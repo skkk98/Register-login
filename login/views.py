@@ -1,6 +1,6 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
-from .forms import RegistrationForm, LoginForm
+from .forms import RegistrationForm, LoginForm, MobileVer
 from django.views.generic import View
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth import authenticate, login
@@ -14,6 +14,7 @@ from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.conf import settings
 from website.sms import send_sms
+from .models import Userss
 
 
 # def index(request):
@@ -22,7 +23,7 @@ from website.sms import send_sms
 
 
 def Oh(request):
-    return HttpResponse("<h1>If you are reading this then Hell yeaaaah! you are logged in!</h1>")
+    return HttpResponse("<h1>you are logged in! Verify Mobile</h1><a href=/login/verify>Click here</a>")
 
 
 class RegisterFormView(View):
@@ -79,7 +80,6 @@ class LoginFormView(View):
 
     def post(self, request):
         form = self.form_class(request.POST)
-        send_sms(str(9949103568), "If you are reading this,then Hell YEAH!!!, You are AWESOME")
         username = request.POST['username']
         password = request.POST['password']
         user = authenticate(request, username=username, password=password)
@@ -89,6 +89,22 @@ class LoginFormView(View):
             return HttpResponseRedirect("oh/")
         else:
             return HttpResponse('<a href=""><strong>Click Here</strong></a> <a>to try again!</a> ')
+
+class MobileVerForm(View):
+    form_class = MobileVer
+    template_name = 'login/userss_form.html'
+
+    def get(self, request):
+        form = self.form_class(None)
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+
+            send_sms(str(form.cleaned_data['mobile']), "a message is sent")
+            return HttpResponse("Your mobile is successfully verified")
+
 
 def activate(request, uidb64, token):
     try:
@@ -102,5 +118,9 @@ def activate(request, uidb64, token):
         login(request, user)
         return HttpResponse('<a>Email confirmed. Click to</a> <a href="/login/login"><strong>Login Here</strong></a>')
     else:
-        return HttpResponse('Activation link is invalid! Click to</a> <a href="/login/login"><strong>Login!</strong></a>')
+        return HttpResponse('Activation link is invalid! Click to</a><a href="/login/login"><strong>Login!</strong></a>')
 
+def Display(request):
+    all_users = User.objects.all()
+    template_name = 'login/display.html'
+    return render(request, template_name, {'all_users': all_users, 'n': range(100)})
